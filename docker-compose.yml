@@ -1,0 +1,13 @@
+services:
+  db:
+    image: postgres:16
+    environment: { POSTGRES_USER: cart3r, POSTGRES_PASSWORD: cart3r, POSTGRES_DB: cart3r }
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck: { test: ["CMD-SHELL","pg_isready -U cart3r"], interval: 5s, retries: 10 }
+  app:
+    build: .
+    env_file: .env
+    environment: { DATABASE_URL: postgresql://cart3r:cart3r@db:5432/cart3r }
+    depends_on: { db: { condition: service_healthy } }
+    ports: ["3000:3000"]
+volumes: { pgdata: {} }
