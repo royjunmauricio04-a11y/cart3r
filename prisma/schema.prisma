@@ -1,92 +1,120 @@
-generator client { provider = "prisma-client-js" }
-datasource db { provider = "postgresql"; url = env("DATABASE_URL") }
+generator client {
+  provider = "prisma-client-js"
+}
 
-enum CampaignStatus { DRAFT ACTIVE COMPLETED ARCHIVED }
-enum MetricSource { LIVE_API CACHED_API MANUAL }
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum CampaignStatus {
+  DRAFT
+  ACTIVE
+  COMPLETED
+  ARCHIVED
+}
+
+enum MetricSource {
+  LIVE_API
+  CACHED_API
+  MANUAL
+}
 
 model User {
-  id String @id @default(cuid())
-  email String @unique
+  id           String            @id @default(cuid())
+  email        String            @unique
   passwordHash String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  videos Video[]
-  campaigns Campaign[]
-  logs ActivityLog[]
-  accounts ConnectedAccount[]
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  videos       Video[]
+  campaigns    Campaign[]
+  logs         ActivityLog[]
+  accounts     ConnectedAccount[]
 }
+
 model Video {
-  id String @id @default(cuid())
-  userId String
-  originalUrl String
-  canonicalUrl String
+  id              String           @id @default(cuid())
+  userId          String
+  originalUrl     String
+  canonicalUrl    String
   platformVideoId String
-  title String?
-  creatorHandle String?
-  thumbnailUrl String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  campaigns CampaignVideo[]
-  metrics MetricSnapshot[]
+  title           String?
+  creatorHandle   String?
+  thumbnailUrl    String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  campaigns       CampaignVideo[]
+  metrics         MetricSnapshot[]
+
   @@unique([userId, platformVideoId])
   @@index([userId, createdAt])
 }
+
 model Campaign {
-  id String @id @default(cuid())
-  userId String
-  name String
+  id          String         @id @default(cuid())
+  userId      String
+  name        String
   description String?
-  status CampaignStatus @default(DRAFT)
-  startsAt DateTime?
-  endsAt DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  videos CampaignVideo[]
+  status      CampaignStatus @default(DRAFT)
+  startsAt    DateTime?
+  endsAt      DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  videos      CampaignVideo[]
+
   @@index([userId, status])
 }
+
 model CampaignVideo {
-  id String @id @default(cuid())
+  id         String   @id @default(cuid())
   campaignId String
-  videoId String
-  createdAt DateTime @default(now())
-  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
-  video Video @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  videoId    String
+  createdAt  DateTime @default(now())
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  video      Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
   @@unique([campaignId, videoId])
 }
+
 // Metric fields are nullable: null = unavailable, never zero-filled or estimated.
 model MetricSnapshot {
-  id String @id @default(cuid())
-  videoId String
-  views Int?
-  likes Int?
-  comments Int?
-  shares Int?
+  id             String       @id @default(cuid())
+  videoId        String
+  views          Int?
+  likes          Int?
+  comments       Int?
+  shares         Int?
   engagementRate Float?
-  source MetricSource
-  capturedAt DateTime @default(now())
-  video Video @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  source         MetricSource
+  capturedAt     DateTime     @default(now())
+  video          Video        @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
   @@index([videoId, capturedAt])
 }
+
 model ActivityLog {
-  id String @id @default(cuid())
-  userId String
-  action String
-  metadata Json?
+  id        String   @id @default(cuid())
+  userId    String
+  action    String
+  metadata  Json?
   createdAt DateTime @default(now())
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId, createdAt])
 }
+
 model ConnectedAccount {
-  id String @id @default(cuid())
-  userId String
-  platform String
+  id                String   @id @default(cuid())
+  userId            String
+  platform          String
   providerAccountId String
-  encryptedTokens String
-  expiresAt DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  encryptedTokens   String
+  expiresAt         DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@unique([platform, providerAccountId])
 }
