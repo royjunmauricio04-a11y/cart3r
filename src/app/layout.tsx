@@ -1,4 +1,9 @@
-export const metadata = { title: "CART3R TIKTOK BOOST" };
+import "./globals.css";
+
+export const metadata = {
+  title: "CART3R — TikTok Boost",
+  description: "Organize TikTok campaigns, video links and promotional assets with clear, authorized analytics.",
+};
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">

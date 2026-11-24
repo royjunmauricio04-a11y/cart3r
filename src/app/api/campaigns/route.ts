@@ -5,17 +5,23 @@ import { db } from "@/lib/db";
 
 const schema = z.object({
   name: z.string().min(1).max(120),
-  description: z.string().max(2000).optional(),
-  startsAt: z.coerce.date().optional(),
-  endsAt: z.coerce.date().optional(),
-  videoIds: z.array(z.string()).max(50).default([]),
+  description: z.string().max(2000).nullable().optional(),
+  status: z.enum(["DRAFT", "ACTIVE", "COMPLETED", "ARCHIVED"]).default("DRAFT"),
+  startsAt: z.coerce.date().nullable().optional(),
+  endsAt: z.coerce.date().nullable().optional(),
+  videoIds: z.array(z.string().min(1)).max(50).default([]).superRefine((ids, ctx) => {
+    if (new Set(ids).size !== ids.length) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Duplicate videos are not allowed" });
+  }),
 }).refine((v) => !v.startsAt || !v.endsAt || v.endsAt >= v.startsAt, { message: "endsAt before startsAt" });
 
 export async function GET() {
   const s = await auth();
   if (!s?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const campaigns = await db.campaign.findMany({
-    where: { userId: s.user.id }, orderBy: { createdAt: "desc" }, include: { _count: { select: { videos: true } } } });
+    where: { userId: s.user.id },
+    orderBy: { createdAt: "desc" },
+    include: { _count: { select: { videos: true } }, videos: { select: { videoId: true } } },
+  });
   return NextResponse.json({ campaigns });
 }
 
